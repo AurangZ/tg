@@ -472,6 +472,10 @@ json_t *json_pack_message (struct tgl_message *M) {
     assert (json_object_set (res, "event", json_string ("service")) >= 0);
     assert (json_object_set (res, "action", json_pack_service (M)) >= 0);
   }
+
+  if (M->reply_markup) {
+    assert (json_object_set (res, "reply_markup", json_pack_reply_markup (M->reply_markup)) >= 0);
+  }
   return res;
 }
 
@@ -506,4 +510,23 @@ json_t *json_pack_user_status (struct tgl_user *U) {
   return res;
 }
 
+json_t *json_pack_reply_markup (struct tgl_message_reply_markup *R) {
+  json_t *res = json_object();
+  assert (json_object_set (res, "refcnt", json_integer(R->refcnt)) >= 0);
+  assert (json_object_set (res, "flags", json_integer(R->flags)) >= 0);
+  assert (json_object_set (res, "button_count", json_integer(R->rows)) >= 0);
+  if(R->rows > 0) {
+    json_t *rows = json_array ();
+    assert (rows);
+    int r;
+    for(r=0; r<R->rows; r++) {
+      json_t *row = json_object();
+      assert (json_object_set (row, "row_start", json_integer(R->row_start[r])) >= 0);
+      assert (json_object_set (row, "button", json_string(R->buttons[r])) >= 0);
+      assert (json_array_append (rows, row) >= 0);
+    }
+    assert (json_object_set (res, "keyboard", rows) >= 0);
+  }
+  return res;
+}
 #endif
