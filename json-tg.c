@@ -514,7 +514,8 @@ json_t *json_pack_reply_markup (struct tgl_message_reply_markup *R) {
   json_t *res = json_object();
   assert (json_object_set (res, "refcnt", json_integer(R->refcnt)) >= 0);
   assert (json_object_set (res, "flags", json_integer(R->flags)) >= 0);
-  assert (json_object_set (res, "button_count", json_integer(R->rows)) >= 0);
+  assert (json_object_set (res, "row_count", json_integer(R->rows)) >= 0);
+  int bcnt = 0;
   if(R->rows > 0) {
     json_t *rows = json_array ();
     assert (rows);
@@ -522,7 +523,14 @@ json_t *json_pack_reply_markup (struct tgl_message_reply_markup *R) {
     for(r=0; r<R->rows; r++) {
       json_t *row = json_object();
       assert (json_object_set (row, "row_start", json_integer(R->row_start[r])) >= 0);
-      assert (json_object_set (row, "button", json_string(R->buttons[r])) >= 0);
+      json_t *buttons = json_array();
+      assert(buttons);
+      while(bcnt < R->row_start[r+1]) {
+          json_t *button = json_object();
+          assert (json_object_set (button, "button", json_string(R->buttons[bcnt++])) >= 0);
+          assert (json_array_append (buttons, button) >= 0);
+        }
+      assert (json_object_set (row, "buttons", buttons) >= 0);
       assert (json_array_append (rows, row) >= 0);
     }
     assert (json_object_set (res, "keyboard", rows) >= 0);
